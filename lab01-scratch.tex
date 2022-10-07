@@ -1,0 +1,508 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={lab 1},
+  pdfauthor={STAT 108},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{lab 1}
+\author{STAT 108}
+\date{1/11/2022}
+
+\begin{document}
+\maketitle
+
+\hypertarget{data-trails-in-san-francisco-ca.}{%
+\section{Data: Trails in San Francisco,
+CA.}\label{data-trails-in-san-francisco-ca.}}
+
+Today's data comes from the
+\href{https://opendata.mtc.ca.gov/datasets/MTC::san-francisco-bay-trail/about}{Metropolitan
+Transportation Commission (MTC) Open Data Catalog} an Open Data program
+managed by the MTC and the Association of Bay Area Governments to
+provide local agencies and the public with their data needs.
+
+In this lab, we will focus on data about the existing and planned
+segments of the San Francisco Bay trail. The data is located in the
+\emph{SFO\_trails.csv} file located in the \emph{data} folder. Use the
+code below to read in the .csv file and save it in the RStudio
+environment as a data frame called \texttt{trails}.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{trails }\OtherTok{\textless{}{-}} \FunctionTok{read\_csv}\NormalTok{(}\StringTok{"data/SFO{-}trails.csv"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+A full list of the variables in the dataset is available
+\href{https://opendata.mtc.ca.gov/datasets/MTC::san-francisco-bay-trail/about}{here}.
+For today's analysis, we will primarily focus on the following
+variables:
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule()
+\endhead
+\texttt{status} & Whether the trail is proposed or existing \\
+\texttt{class} & Category for the trail segment (4 types) \\
+\texttt{length} & Length of the trail segment in miles \\
+\bottomrule()
+\end{longtable}
+
+\hypertarget{exercises}{%
+\section{Exercises}\label{exercises}}
+
+\textbf{Write your answers in complete sentences and show all code and
+output.}
+
+Before doing any analysis, we may want to get quick view of the data.
+This is a useful thing to do after importing data to see if the data
+imported correctly. One way to do this, is to look at the actual
+dataset. Type the code below in the \textbf{console} to view the entire
+dataset.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{View}\NormalTok{(trails)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{exploratory-data-analysis}{%
+\subsection{Exploratory Data Analysis}\label{exploratory-data-analysis}}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Now that we've had a quick view of the dataset, let's get more details
+  about its structure. Sometimes viewing a summary of the data structure
+  is more useful than viewing the raw data, especially if the dataset
+  has a large number of observations and/or rows. Run the code below to
+  use the \texttt{glimpse} function to see a summary of the
+  \texttt{trails} dataset.
+
+  How many observations are in the \texttt{trails} dataset? How many
+  variables?
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{glimpse}\NormalTok{(trails)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{1}
+\item
+  Before conducting statistical inference (or eventually fitting
+  regression models), we need do some exploratory data analysis (EDA).
+  Much of EDA consists of visualizing the data but it also includes
+  calculating summary statistics for the variables in our dataset. Let's
+  begin by examining the distribution of \texttt{status} with a data
+  visualization and summary statistics.
+
+  \begin{itemize}
+  \item
+    What is a type of graph that's appropriate to visualize the
+    distribution of \texttt{status}? Fill in the \texttt{ggplot} code
+    below to plot the distribution of \texttt{status}. Include
+    informative axis labels and title on the graph.
+  \item
+    Then, calculate the proportion of observations in each category of
+    \texttt{status} by completing the code below.
+  \end{itemize}
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ trails, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ status)) }\SpecialCharTok{+} 
+\NormalTok{  \_\_\_\_\_\_\_\_\_\_ }\SpecialCharTok{+} 
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{"\_\_\_\_\_\_\_\_\_"}\NormalTok{, }
+       \AttributeTok{y =} \StringTok{"\_\_\_\_\_\_\_\_\_"}\NormalTok{, }
+       \AttributeTok{title =} \StringTok{"\_\_\_\_\_\_\_\_\_\_"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{trails }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{count}\NormalTok{(\_\_\_\_\_) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{proportion =}\NormalTok{ n }\SpecialCharTok{/} \FunctionTok{sum}\NormalTok{(n))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{2}
+\tightlist
+\item
+  Since we want to analyze characteristics for trails in the Bay Area,
+  we will just use data from currently existing trails for the remainder
+  of the analysis. Complete the code below to use the \texttt{filter}
+  function to create a subset consisting only of trails that currently
+  exist and have a value reported for \texttt{length}. Assign the subset
+  the name \texttt{current\_trails}. (\emph{Hint: There should be 493
+  observations in current\_trails.})
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{\_\_\_\_\_\_\_\_\_\_ }\OtherTok{\textless{}{-}}\NormalTok{ trails }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{filter}\NormalTok{(status }\SpecialCharTok{==} \StringTok{"\_\_\_\_\_\_"}\NormalTok{, }\SpecialCharTok{!}\FunctionTok{is.na}\NormalTok{(\_\_\_\_\_\_))}
+\end{Highlighting}
+\end{Shaded}
+
+\emph{This is a good place to knit, commit, and push changes to your
+remote lab-01 repo on GitHub. Be sure to write an informative commit
+message (e.g.~``Completed exercises 1 - 3''), and push every file to
+GitHub by clicking the checkbox next to each file in the Git pane. After
+you push the changes, the Git pane in RStudio should be empty.''}
+
+\textbf{Use \texttt{current\_trails} for Exercises 4 - 7.}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{3}
+\item
+  Let's examine the distribution of \texttt{length}. One important part
+  of EDA is creating data visualizations to see the shape, center,
+  spread, and outliers in a distribution. Data visualizations are also
+  useful for examining the relationship between multiple variables.
+  There are a lot of ways to make data visualizations in R; we will use
+  the functions available in the \texttt{ggplot2} package.
+
+  Make a graph to visualize the distribution of \texttt{length}. Include
+  an informative title and axis labels.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ current\_trails) }\SpecialCharTok{+}
+  \FunctionTok{geom\_histogram}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ \_\_\_\_\_), }\AttributeTok{binwidth =} \FloatTok{0.5}\NormalTok{)}
+
+\FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ current\_trails, }\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}\AttributeTok{x =} \FunctionTok{as.factor}\NormalTok{(class), }\AttributeTok{y =}\NormalTok{ \_\_\_\_\_)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_boxplot}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+See
+\href{https://r4ds.had.co.nz/exploratory-data-analysis.html\#introduction-3}{Section
+7.3.1 ``Visualizing Distributions''} or the
+\href{https://ggplot2.tidyverse.org/reference/index.html}{ggplot2
+reference page} for details and example code.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{4}
+\tightlist
+\item
+  Next, fill in the code below to use the \texttt{summarise} function to
+  calculate various summary statistics for the variable \texttt{length}.
+  You can use the
+  \href{https://dplyr.tidyverse.org/reference/summarise.html}{summarise
+  reference page} for more information about the function and example
+  code.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{current\_trails }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{summarise}\NormalTok{(}\AttributeTok{min =}\NormalTok{ \_\_\_\_\_\_\_\_\_\_, }
+            \AttributeTok{q1 =}\NormalTok{ \_\_\_\_\_\_\_\_\_\_, }
+            \AttributeTok{median =}\NormalTok{ \_\_\_\_\_\_\_\_\_\_, }
+            \AttributeTok{q3 =}\NormalTok{ \_\_\_\_\_\_\_\_\_\_, }
+            \AttributeTok{max =}\NormalTok{ \_\_\_\_\_\_\_\_\_\_, }
+            \AttributeTok{iqr =}\NormalTok{ \_\_\_\_\_\_\_\_\_\_, }
+            \AttributeTok{mean =}\NormalTok{ \_\_\_\_\_\_\_\_\_\_, }
+            \AttributeTok{std\_dev =}\NormalTok{ \_\_\_\_\_\_\_\_\_\_}
+\NormalTok{            )}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{5}
+\item
+  Describe the distribution of \texttt{length}. Your description should
+  include comments about the shape, center, spread, and any potential
+  outliers. Use the graph from Exercise 4 and relevant summary
+  statistics from Exercise 5 in your description.
+\item
+  We want to limit the analysis to trails that are more likely intended
+  for day hikes, rather than multi-day hikes and camping. Therefore,
+  let's remove the extreme outliers from the data for this analysis and
+  only consider those trails that are 5 miles or shorter.
+
+  Filter the dataset to remove the extreme outliers. \textbf{Be sure to
+  save the updated dataset, so you can use it for the remainder of the
+  lab.}
+\end{enumerate}
+
+\emph{This is a good place to knit, commit, and push changes to your
+remote lab-01 repo on GitHub. Be sure to write informative commit
+message (e.g.~``Completed exercises 4 - 7''), and push every file to
+GitHub by clicking the checkbox next to each file in the Git pane. After
+you push the changes, the Git pane in RStudio should be empty.''}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{7}
+\tightlist
+\item
+  Consider the distribution of \texttt{class}.
+
+  \begin{itemize}
+  \tightlist
+  \item
+    What are the values of \texttt{class} in the dataset? Show the code
+    and output to support your answer.
+  \item
+    What do you think is the most likely reason for the missing
+    observations of \texttt{class}? In other words, what does a missing
+    value of \texttt{class} indicate?
+  \end{itemize}
+\item
+  Complete the code below to impute (i.e.~fill in) the missing values of
+  \texttt{class} with the appropriate value. After that, eliminate all
+  the observations from class = 3, since we are not going to use the.
+  Then, display the distribution of \texttt{class} to check that the
+  missing values were correctly imputed.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{\_\_\_\_\_\_\_\_\_\_ }\OtherTok{\textless{}{-}}\NormalTok{ \_\_\_\_\_\_\_\_\_\_ }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(class }\SpecialCharTok{!=}\DecValTok{3}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{class =} \FunctionTok{if\_else}\NormalTok{(}\FunctionTok{is.na}\NormalTok{(class),\_\_\_\_\_\_,class)) }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{9}
+\item
+  Now that we've completed the univariate EDA (i.e.~examining one
+  variable at a time), let's examine the relationship between the length
+  of the trail and its class variable. Make a graph to visualize the
+  relationship between \texttt{length} and \texttt{class} and calculate
+  the appropriate summary statistics. Include informative axis labels
+  and title on your graph.
+\item
+  Describe the relationship between \texttt{length} and \texttt{class}.
+  In other words, describe how the distribution of \texttt{length}
+  compares between trails that have different classes (1 = shared use
+  bicycle and pedestrian path, 2 = bike lane, and 3 = bike route).
+  Include information from the graph and summary statistics from the
+  previous exercise in your response.
+\end{enumerate}
+
+\emph{This is a good place to knit, commit, and push changes to your
+remote lab-01 repo on GitHub. Be sure to write informative commit
+message (e.g.~``Completed exercises 8 - 11''), and push every file to
+GitHub by clicking the checkbox next to each file in the Git pane. After
+you push the changes, the Git pane in RStudio should be empty.''}
+
+\hypertarget{statistical-inference}{%
+\subsection{Statistical Inference}\label{statistical-inference}}
+
+We'd like to use the data from the trails in SFO to make more general
+conclusions about trails in urban areas in California, United States. We
+will reasonably consider the trails in SFO representative of the trails
+in other urban areas in the West Coast of United States.
+
+Over the next few questions, will use statistical inference to assess
+whether there is a difference in the mean length of trails that share
+use bicycle and pedestrian path (class = 1) and those that only have a
+bike line (class = 2).
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{11}
+\tightlist
+\item
+  The following conditions must be met when we conduct statistical
+  inference on the difference in means between two groups. For each
+  condition, specify whether it is met and a brief explanation of your
+  reasoning.
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \textbf{Independence}
+  \item
+    \textbf{Sample Size}
+  \item
+    \textbf{Independent Groups}
+  \end{itemize}
+\item
+  While we have observed a small difference in the mean length in trails
+  with bike lanes (class = 2) and trials that share bikes with
+  pedestrians (class = 1), let's assess if there is enough evidence to
+  consider the difference ``statistically significant'' or if it appears
+  to be due to random chance.
+\end{enumerate}
+
+The null and alternative hypotheses are written in statistical notation
+below. State the hypotheses in words in the context of this analysis.
+
+\[H_0: \mu_1 - \mu_2 = 0 \\
+H_a: \mu_1 - \mu_2 \neq 0\]
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{13}
+\tightlist
+\item
+  Fill in the code below to use the \texttt{t.test} function to
+  calculate the test statistic and p-value. Replace \texttt{response}
+  with the variable we're interested in drawing conclusions about and
+  \texttt{group\_var} with the variable used to define the two groups.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{?t.test }\CommentTok{\# to see the help page from the function}
+\FunctionTok{t.test}\NormalTok{(response }\SpecialCharTok{\textasciitilde{}}\NormalTok{ group\_var, }\AttributeTok{data =}\NormalTok{ \_\_\_\_\_\_\_\_, }
+       \AttributeTok{alternative =} \StringTok{"\_\_\_\_\_\_\_\_\_\_\_"}\NormalTok{, }
+       \AttributeTok{conf.level =} \FloatTok{0.99}\NormalTok{) }\CommentTok{\#less, greater, or two.sided}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{14}
+\tightlist
+\item
+  Use the output from the previous exercise to answer the following:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Write the definition of the test statistic in the context of this
+    analysis.
+  \item
+    Write the definition of the p-value in the context of this analysis.
+  \item
+    State your conclusion in the context of this analysis. Use a
+    significance level of \(\alpha = 0.01\).
+  \end{itemize}
+\item
+  Notice the confidence interval for the difference in mean trail length
+  printed in the output from Exercise 14. Interpret this confidence
+  interval in the context of this analysis.
+\end{enumerate}
+
+\emph{You're done and ready to submit your work! Knit, commit, and push
+all remaining changes. You can use the commit message ``Done with Lab
+1!'', and make sure you have pushed all the files to GitHub (your Git
+pane in RStudio should be empty) and thatall documents are updated in
+your repo on GitHub. Then submit the pdf for your assignment on
+Gradescope. Include your repo name, so I can check your commits.}
+
+\end{document}
