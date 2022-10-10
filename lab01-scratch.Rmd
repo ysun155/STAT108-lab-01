@@ -66,7 +66,7 @@ ggplot(data = trails, aes(x = status)) +
   geom_bar() + 
   labs(x = "Status", 
        y = "Frequency", 
-       title = "barplot for trails status")
+       title = "Barplot for Trails Status")
 ```
 
 
@@ -123,7 +123,7 @@ current_trails %>%
 
 6. Describe the distribution of `length`. Your description should include comments about the shape, center, spread, and any potential outliers. Use the graph from Exercise 4 and relevant summary statistics from Exercise 5 in your description.
 
-    Answer: From exercise 4 and 5, since the mean is greater than median, the distribution of length is right-skewed. The center of distribution      is around 0.45, and 3 outliers are identified in class 1 from the boxplot. The data of length covers a large range, around 8.4. The low           standard deviation 0.85 represents that data of length are clustered around the mean.
+    Answer: From exercise 4 and 5, since the mean is greater than median, the distribution of length is right-skewed. The center of distribution is around 0.45, and 3 outliers are identified in class 1 from the boxplot. The data of length covers a large range, around 8.4. The low standard deviation 0.85 represents that data of length are clustered around the mean.
 
 7. We want to limit the analysis to trails that are more likely intended for day hikes, rather than multi-day hikes and camping. Therefore, let's remove the extreme outliers from the data for this analysis and only consider those trails that are 5 miles or shorter. 
 
@@ -146,31 +146,36 @@ glimpse(dayhikes_trails)
 count(trails, class)
 ```
 
-    Answer: Values of class in the dataset are "1", "2", "3", NA. Since there are totally 4 types of classes, most likely reason for the missing      observations is that they are in class 4.
+    Answer: Values of class in the dataset are "1", "2", "3", NA. Since there are totally 4 types of classes, most likely reason for the missing observations is that they are in class 4.
 
 9. Complete the code below to impute (i.e. fill in) the missing values of `class` with the appropriate value. After that, eliminate all the observations from class = 3, since we are not going to use the. Then, display the distribution of `class` to check that the missing values were correctly imputed.
 
 ```{r eval=FALSE}
-filtered_trails <- trails %>% filter(class !=3) %>%
+imputed_trails <- trails %>%
   mutate(class = if_else(is.na(class),4,class))
-count(filtered_trails, class)
+count(imputed_trails, class)
+
+filtered_trails <- imputed_trails %>%
+  filter(class != 3 & class != 4)
 ```
 
 10. Now that we've completed the univariate EDA (i.e. examining one variable at a time), let's examine the relationship between the length of the trail and its class variable. Make a graph to visualize the relationship between `length` and `class` and calculate the appropriate summary statistics. Include informative axis labels and title on your graph.
 
 ```{r}
-ggplot(trails, aes(x = length, group = class, fill = class, colour = class)) + 
+ggplot(imputed_trails, aes(x = length, group = as.factor(class), fill = as.factor(class), colour = as.factor(class))) + 
   geom_histogram(alpha = 0.5, position = "identity", bins = 20) + 
+  facet_grid(. ~ as.factor(class) ) +
   theme(legend.position = "right") + 
   labs(x = "Length of trails", title = "Distribution between the length of the trail and its class variable")
 
-#summary statistics (?)
+#summary statistics
+tapply(imputed_trails$length, imputed_trails$class, summary)
 ```
 
 
 11. Describe the relationship between `length` and `class`. In other words, describe how the distribution of `length` compares between trails that have different classes (1 = shared use bicycle and pedestrian path, 2 = bike lane, and 3 = bike route). Include information from the graph and summary statistics from the previous exercise in your response.
 
-    Answer: Class 1 generally have more shorter trails than class 2. (...)
+    Answer: There are insufficient data for class 3 and 4, therefore we cannot identify any distribution or relationship. For class 1 and 2, both distribution are right-skewed, with a larger mean than median. Also, their centers are near to each other. Length of shared use bicycle and pedestrian path (class 1) has a larger range and outliers than length of bike lane (class 2). There are much more shared path (class 1) collected in the sample.
 
 
 *This is a good place to knit, commit, and push changes to your remote lab-01 repo on GitHub. Be sure to write informative commit message (e.g. "Completed exercises 8 - 11"), and push every file to GitHub by clicking the checkbox next to each file in the Git pane. After you push the changes, the Git pane in RStudio should be empty."*
@@ -183,7 +188,7 @@ We'd like to use the data from the trails in SFO to make more general conclusion
 Over the next few questions, will use statistical inference to assess whether there is a difference in the mean length of trails that share use bicycle and pedestrian path (class = 1) and those that only have a bike line (class = 2).
 
 12. The following conditions must be met when we conduct statistical inference on the difference in means between two groups. For each condition, specify whether it is met and a brief explanation of your reasoning. 
-    - **Independence** Yes, each individual trails is independent from each other and no single trails is named/recorded twice.
+    - **Independence** Yes, each individual trails is independent from each other. Although they might be connected, their lengths aren't related to each other.
     - **Sample Size** Yes, we have 729 samples for class 1 and 2, which is considered a large sample size.
     - **Independent Groups** Yes, each trails is assigned to only one type of class, therefore two classes are independent from each other.
 
@@ -194,8 +199,8 @@ The null and alternative hypotheses are written in statistical notation below. S
 $$H_0: \mu_1 - \mu_2 = 0 \\
 H_a: \mu_1 - \mu_2 \neq 0$$
 
-    Answer: Null hypothesis: Theere's no difference in the mean length in trails with bike     lanes (class = 2) and trials that share bikes with pedestrians (class = 1).
-    Alternative hypothesis: There is difference in the mean length in trails with bike        lanes (class = 2) and trials that share bikes with pedestrians (class = 1).
+    Answer: Null hypothesis: There's no difference in the mean length in trails with bike lanes (class = 2) and trials that share bikes with pedestrians (class = 1).
+    Alternative hypothesis: There is a difference in the mean length in trails with bike lanes (class = 2) and trials that share bikes with pedestrians (class = 1).
 
 14. Fill in the code below to use the `t.test` function to calculate the test statistic and p-value. Replace `response` with the variable we're interested in drawing conclusions about and `group_var` with the variable used to define the two groups.
 
@@ -208,15 +213,16 @@ t.test(length ~ class, data = filtered_trails,
 
 15. Use the output from the previous exercise to answer the following: 
     - Write the definition of the test statistic in the context of this analysis.
-        The number of standard errors of the difference in mean length in trails with bike          lanes (class = 2) and trials that share bikes with pedestrians (class = 1) is               0.60392. (?)
+        The number of standard errors of the difference in mean length in trails with bike lanes (class = 2) and trials that share bikes with pedestrians (class = 1) is 0.60392. 
         
     - Write the definition of the p-value in the context of this analysis. 
-        Assuming there's no difference between mean length in trails with bike lanes (class         = 2) and trials that share bikes with pedestrians (class = 1), the probability of obtaining test results as least as extreme as the result actually observed is 0.5462.
+        Assuming there's no difference between mean length in trails with bike lanes (class = 2) and trials that share bikes with pedestrians (class = 1), the probability of obtaining test results as least as extreme as the result actually observed is 0.5462.
 
     - State your conclusion in the context of this analysis. Use a significance level of          $\alpha = 0.01$. 
-        We would reject the null hypothsis and conclude that there's sufficient evidence            that the difference between mean length in trails with bike lanes (class = 2) and           trials that share bikes with pedestrians (class = 1) is not 0.
+        Since p-value is larger than 0.01, We conclude that there isn't sufficient evidence against the null hypothsis and fail to reject that there's no difference between mean length in trails with bike lanes (class = 2) and trials that share bikes with pedestrians (class = 1) is not 0.
 
-16. Notice the confidence interval for the difference in mean trail length printed in the output from Exercise 14. Interpret this confidence interval in the context of this analysis.     Answer: We are 99% confidence that the mean length in trails with bike lanes (class = 2)     and trials that share bikes with pedestrians (class = 1) is between -0.12 and 0.20.
+16. Notice the confidence interval for the difference in mean trail length printed in the output from Exercise 14. Interpret this confidence interval in the context of this analysis.     
+    Answer: We are 99% confidence that the difference of mean length in trails with bike lanes (class = 2) and trials that share bikes with pedestrians (class = 1) is between -0.12 and 0.20.
 
 *You're done and ready to submit your work! Knit, commit, and push all remaining changes. You can use the commit message "Done with Lab 1!", and make sure you have pushed all the files to GitHub (your Git pane in RStudio should be empty) and that<u>all</u> documents are updated in your repo on GitHub. Then submit the pdf for your assignment on Gradescope. Include your repo name, so I can check your commits.*
 
