@@ -1,12 +1,17 @@
 ---
-title: "Untitled"
-author: "STAT 108"
+title: "Lab3"
+author: "Yijia Sun"
 date: "1/26/2022"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(knitr)
+library(broom)
+library(modelr)
+library(openintro) #package containing dataset
 ```
 
 # Data: Gift aid at Elmhurst College
