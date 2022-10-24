@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
 library(tidyverse)
 library(knitr)
 library(broom)
@@ -22,6 +23,7 @@ You can load the data from loading the openintro package, and then running the f
 
 ```{r eval = F}
 data(elmhurst)
+head(elmhurst)
 ```
 
 The `elmhurst` dataset contains the following variables: 
@@ -38,36 +40,88 @@ The `elmhurst` dataset contains the following variables:
 
 1. Plot a histogram to examine the distribution of `gift_aid`. What is the approximate shape of the distribution? Also note if there are any outliers in the dataset.
 
+```{r}
+ggplot(elmhurst, aes(x = gift_aid)) + geom_histogram(binwidth = 1) + xlab("Gift Aid (in $ thousands)") + ggtitle("Histogram for Gift Aid")
+```
+
+**ANSWER: The approximate shape is normal distribution, with little left-skewed. One outlier is identified.**
+
+
+
 2. To better understand the distribution of `gift_aid`, we would like calculate measures of center and spread of the distribution. Use the `summarise` function to calculate the appropriate measures of center (mean or median) and spread (standard deviation or IQR) based on the shape of the distribution from Exercise 1. Show the code and output, and state the measures of center and spread in your narrative. *Be sure to report your conclusions for this exercise and the remainder of the lab in dollars.*
 
-3. Plot the distribution of `family_income` and calculate the appropriate summary statistics. Describe the distribution of `family_income` (shape, center, and spread, outliers) using the plot and appropriate summary statistics.  
+```{r}
+elmhurst %>%
+  summarise(mean = mean(gift_aid),
+            median = median(gift_aid),
+            iqr = IQR(gift_aid),
+            std_dev = sd(gift_aid))
+
+```
+**ANSWER: Mean of gift aid is 19.93 thousands dollars, and median is 20.47 thousands dollars. The median of gift aid is larger than mean, which implies a left-skewed distribution in gift-aid. More than half of gift aid is 19.93 thousands dollars plus or minus 5.46 thousands dollars.**
+
+
+3. Plot the distribution of `family_income` and calculate the appropriate summary statistics. Describe the distribution of `family_income` (shape, center, and spread, outliers) using the plot and appropriate summary statistics. 
+
+
+```{r}
+ggplot(elmhurst, aes(x = family_income)) + geom_histogram(binwidth = 10) + xlab("Family Income (in $ thousands)") + ggtitle("Histogram for Family Income")
+
+elmhurst %>%
+  summarise(mean = mean(family_income),
+            median = median(family_income),
+            iqr = IQR(family_income),
+            std_dev = sd(family_income))
+```
+
+
+**ANSWER: The distribution of family income is right-skewed with few outliers identified. The mean of family income is 101.88 thousands dollars, and median is 88.06 thousands dollars. Data is spread out around the mean with standard deviation 63.20 thousands dollars. Two outliers identified are around 250 thousands dollars.**
 
 4. Create a scatterplot to display the relationship between `gift_aid` (response variable) and `family_income` (predictor variable). Use the scatterplot to describe the relationship between the two variables. Be sure the scatterplot includes informative axis labels and title.
+
+```{r}
+ggplot(elmhurst, aes(x = family_income, y = gift_aid)) + geom_point() + xlab("Family Income (in $ thousands)") + ylab("Gift Aid (in $ thousands") + ggtitle("Scatterplot between Gift Aid and Family Income")
+```
+
+**ANSWER: There's a linear relationship and negative correlation between gift aid and family income.**
+
+
 
 ## Simple Linear Regression
 
 5. Use the `lm` function to fit a simple linear regression model using `family_income` to explain variation in `gift_aid`. Complete the code below to assign your model a name, and use the `tidy` and `kable` functions to neatly display the model output. *Replace X and Y with the appropriate variable names.*
 
 ```{r eval=FALSE}
-_____ <- lm(Y ~ X, data = _____)
-tidy(_____) %>% # output model
+linear_reg <- lm(gift_aid ~ family_income, data = elmhurst)
+tidy(linear_reg) %>% # output model
   kable(digits = 3) # format model output
 ```
 
+
 6. Interpret the slope in the context of the problem.
+
+**ANSWER: For one thousand dollar increase in family income, there's a decrease of 0.043 thousand dollar in gift aid.**
 
 7. When we fit a linear regression model, we make assumptions about the underlying relationship between the response and predictor variables. In practice, we can check that the assumptions hold by analyzing the residuals. Over the next few questions, we will examine plots of the residuals to determine if the assumptions are met.
 
 Let's begin by calculating the residuals and adding them to the dataset. Fill in the model name in the code below to add residuals to the original dataset using the `resid()` and `mutate()` functions.
 
 ```{r eval=FALSE}
-_____<- _____ %>%
-  mutate(resid = residuals(_____))
+elmhurst <- elmhurst %>%
+  mutate(resid = residuals(linear_reg))
+head(elmhurst)
 ```
 
 8. One of the assumptions for regression is that there is a linear relationship between the predictor and response variables. To check this assumption, we will examine a scatterplot of the residuals versus the predictor variable. 
 
 Create a scatterplot with the predictor variable on the *x* axis and residuals on the *y* axis. Be sure to include an informative title and properly label the axes. 
+
+```{r}
+ggplot(elmhurst, aes(x = family_income, y = resid)) + geom_point() + xlab("Family Income (in $ thousands)") + ylab("residuals") + ggtitle("Scatterplot between Family Income and Residuals")
+```
+
+
+
 
 9. Examine the plot from the previous question to assess the linearity condition.  
 
@@ -76,26 +130,65 @@ Create a scatterplot with the predictor variable on the *x* axis and residuals o
 
 Based on this, is the linearity condition is satisfied? Briefly explain your reasoning. 
 
+**ANSWER: Yes, the linearity is satisfied. The points in the scatterplot show no pattern and the points are randomly dispersed.**
+
+
 10. Recall that when we fit a regression model, we assume for any given value of $x$, the $y$ values follow the Normal distribution with mean $\beta_0 + \beta_1 x$ and variance $\sigma^2$. We will look at two sets of plots to check that this assumption holds.
 
     We begin by checking the constant variance assumption, i.e that the variance of $y$ is approximately equal for each value of $x$. To check this, we will use the scatterplot of the residuals versus the predictor variable $x$. Ideally, as we move from left to right, the spread of the $y$'s will be approximately equal, i.e. there is no "fan" pattern.
 
     Using the scatterplot from Exercise 8 , is the constant variance assumption satisfied? Briefly explain your reasoning. *Note: You don't need to know the value of $\sigma^2$ to answer this question.*
+    
+**ANSWER: Yes, the constant variance assumption is satisfied. The spread of the residuals is roughly equal at every level of the fitted values.**
 
 
 11. Next, we will assess with Normality assumption, i.e. that the distribution of the $y$ values is Normal at every value of $x$. In practice, it is impossible to check the distribution of $y$ at every possible value of $x$, so we can check whether the assumption is satisfied by looking at the overall distribution of the residuals. The assumption is satisfied if the distribution of residuals is approximately Normal, i.e. unimodal and symmetric.
 
     Make a histogram of the residuals. Based on the histogram, is the Normality assumption satisfied? Briefly explain your reasoning. 
+    
+```{r}
+ggplot(elmhurst, aes(x = resid)) + geom_histogram(binwidth = 3) + xlab("residuals") + ggtitle("Histogram for the residuals")
+```
+
+**ANSWER: Yes, the normality assumption is satisfied. The histogram shows a normal distribution in the residuals.**
+
 
 12. The final assumption is that the observations are independent, i.e. one observation does not affect another. We can typically make an assessment about this assumption using a description of the data. Do you think the independence assumption is satisfied? Briefly explain your reasoning. 
+
+**ANSWER: Gift aid is not totally independent from family income, since students with lower family income is more likely to apply for gift aid.**
+
+
 
 ## Using the Model
 
 13. Calculate $R^2$ for this model and interpret it in the context of the data.
 
+```{r}
+summary(linear_reg)$r.squared
+```
+
+**ANSWER: 24.85% of the variation in the gift aid can be explained by family income.**
+
 
 14. Suppose a high school senior is considering Elmhurst College, and she would like to use your regression model to estimate how much gift aid she can expect to receive. Her family income is $90,000. Based on your model, about how much gift aid should she expect to receive? Show the code or calculations you use to get the prediction. 
 
+```{r}
+newdata <- data.frame(family_income = 90)
+predict(linear_reg, newdata, interval = "prediction")
+```
+
+
+
+
 15. Another high school senior is considering Elmhurst College, and her family income is about $310,000. Do you think it would be wise to use your model calculate the predicted gift aid for this student?  Briefly explain your reasoning. 
+
+```{r}
+summary(elmhurst$family_income)
+```
+
+
+**ANSWER: No, it wouldn't be wise to use my model to calculate the predicted gift aid. The range of family income is between 0 to 271.97. Since 310 is outside of our range, it's hard to predict accurately.**
+
+
 
 *You're done and ready to submit your work! Knit, commit, and push all remaining changes. You can use the commit message "Done with Lab 2!", and make sure you have pushed all the files to GitHub (your Git pane in RStudio should be empty) and that <u>all</u> documents are updated in your repo on GitHub. Then submit the assignment on Gradescope following the instructions below.*
