@@ -1,0 +1,194 @@
+
+
+The goal of this lab is to use Analysis of Variance (ANOVA) to understand the variation in price of diamonds that are 0.5 carats. Additionally, you will be introduced to new R function used for [wrangling](https://en.wikipedia.org/wiki/Data_wrangling) and summarizing data.
+
+# Getting Started
+
+## GitHub
+
+Create a repo on your Github in the same way you did for labs 1 and 3. This time, you will create your own .Rmd from scratch, and sync your R Studio project with your Github repo.
+
+## Packages
+
+We will use the following packages in today's lab.
+
+```{r}
+library(tidyverse)
+library(knitr)
+library(broom)
+library(patchwork)
+library(ggpubr)
+library(rstatix)
+```
+
+## Data
+
+In today's lab, we will analyze the `diamonds` dataset from the ggplot2 package . Type `?diamonds` in the console to see a dictionary of the variables in the data set. The primary focus of this analysis will be examining the relationship between a diamond's cut and price.
+
+Before starting the exercises, take a moment to read more about the diamond attributes on the Gemological Institute of America webpage: <https://www.gia.edu/diamond-quality-factor>.
+
+```{r}
+diamonds <- diamonds
+head(diamonds)
+```
+
+# Exercises
+
+The `diamonds` dataset contains the price and other characteristics for over 50,000 diamonds. For this analysis, we will only consider diamonds that have a carat weight of 0.5.
+
+### Exploratory data analysis
+
+1.  Create a new data frame that is a subset of diamonds that weigh 0.5 carats. How many observations are in the new dataset?
+
+**ANSWER: 1258 observations are in the new dataset.**
+
+```{r}
+df <- subset(diamonds, carat == "0.5")
+glimpse(df)
+```
+
+<i>You will use this subset for the remainder of lab.</i>
+
+2.  When using Analysis of Variance (ANOVA) to compare group means, it is ideal to have approximately the same number of observations for each group.
+
+    -   Which two levels of `cut` have the fewest number of observations? Show the code and output used to support your answer.
+
+    **ANSWER: Good and fair cuts have the fewest number of observations.**
+
+```{r}
+df %>% 
+  count(cut, sort = TRUE)
+
+df <- df %>%
+  mutate(cut = fct_lump(cut, n = 3, other_level = "Good or Fair"))
+```
+
+See the [forcats](https://forcats.tidyverse.org/index.html) reference page for ideas on recoding factor variables.
+
+    - Recode the variable `cut`, so that the two levels with the fewest number of observations are combined into one level. Be sure to give the new level an informative name and save the results to the data frame. **<i>You will use the recoded version of `cut` for the remainder of the lab.</i>**
+
+3.  Confirm that the variable `cut` was recoded as expected. Show the code and output used to check the recoding.
+
+```{r}
+df%>%
+  count(cut,sort = TRUE)
+```
+
+4.  Create a plot to display the relationship between `cut` and `price`. Be sure to include informative axes labels and an informative title.
+
+```{r}
+df$cut <- factor(df$cut, levels=c("Ideal", "Premium", "Very Good", "Good or Fair"))
+
+df %>%
+  ggplot(aes(x = cut, y = price)) + geom_boxplot() + xlab("Type  of cut") + ylab("Prices of diamonds") + ggtitle("Boxplot for prices of diamonds that are 0.5 carats in each type of cut")
+```
+
+5.  Calculate the number of observations along with the mean and standard deviation of `price` for each level of `cut`.
+
+```{r}
+df %>%
+  group_by(cut) %>%
+  summarise(count = n(),
+            mean = mean(price),
+            standard_deviation = sd(price))
+```
+
+6.  Based on the plots and summary statistics from the previous exercises , does there appear to be a relationship between the cut and price for diamonds that are 0.5 carats? Briefly explain your reasoning.
+
+**ANSWER: Better the cuts, higher the mean price of diamonds that are 0.5 carats. However, outliers exist for very good and good or fair cuts, which exceeds the maximum price for ideal cut.**
+
+## Analysis of Variance
+
+7.  When using ANOVA to compare means across groups, we make the following assumptions (note how similar they are to the assumptions for regression):
+
+-   **Normality**: The distribution of the response, $y$, is approximately normal within each category of the predictor, $x$ - in the $i^{th}$ category, the $y$'s follow a $N(\mu_i, \sigma^2)$ distribution.
+-   **Independence**: All observations are independent from one another, i.e. one observation does not affect another.
+-   **Constant Variance**: The distribution of the response within each category of predictor, $x$ has a common variance, $\sigma^2$.
+
+Are the assumptions for ANOVA satisfied? Comment on each assumption, including an explanation for your reasoning and any summary statistics and/or plots used to make the conclusion.
+
+**ANSWER:** **Normality - Yes, by histogram below, the distribution of prices is approximately normal for each type of cuts.**
+
+**Independence - Yes, each diamonds are independent from one another.** 
+
+**Constant Variance - Yes, by the summary statistics, the prices for each type of cuts have a common variance.**
+
+```{r}
+ggplot(data = df,mapping = aes(x = price)) +
+  geom_histogram() + 
+  facet_wrap(~ cut) +
+  labs(title = "Diamonds price by cuts") + xlab("Prices")
+
+```
+
+8.  Display the ANOVA table used to examine the relationship between `cut` and `price` for diamonds that are 0.5 carats.
+
+```{r}
+model <- lm(price ~ cut, data = df)
+
+anova(model) %>%
+  kable(format = "markdown", digits = 3)
+```
+
+9.  Use the ANOVA table from the previous question to calculate the sample variance of `price`. Show the code / formula used to calculate the sample variance.
+
+```{r}
+dim(df)
+(11507056 + 150706506) / (1258 - 1)
+```
+
+10. What is $\hat{\sigma}^2$, the estimated variance of `price` within each level of `cut`.
+
+**ANSWER: 120180.6**
+
+11. State the null and alternative hypotheses for the test conducted using the ANOVA table in Exercise 8. State the hypotheses using both statistical notation and words in the context of the data.
+
+$$
+\begin{aligned}
+&H_0: \mu_1 = \mu_2 = \dots =  \mu_K\\
+&H_a: \text{At least one }\mu_i \text{ is not equal to the others}
+\end{aligned}
+$$
+**Null hypotheses: The mean prices of diamonds that are 0.5 carats are the same for all type of cuts.**
+
+**Alternative hypotheses: For at least one type of cuts, the mean price of diamonds that are 0.5 carats is not equal to the other.**
+
+12. What is your conclusion for the test specified in the previous question? State the conclusion in the context of the data.
+
+**ANSWER: Since the p-value is approximately 0, we have evidence to reject the null hypotheses and conclude that for at least one type of cuts, the mean price of diamonds that are 0.5 carats is not equal to the other.**
+
+
+## Additional Analysis
+
+13. Based on the conclusion of the ANOVA test, conduct further statistical analysis to provide more detail about which level(s) is(are) different and by how much. If further statistical analysis is not required, provide a brief explanation why it isn't based on the conclusion from the ANOVA test.
+
+**ANSWER: Using pairwise t-test, we can conclude that each cuts has different mean price from others. Then, using the multiple linear regression, we can estimate the mean difference between the ideal cut group and other groups.**
+
+```{r}
+pairwise_t_test(data = df, price ~ cut, p.adjust.method = "bonferroni")
+
+tidy(model, conf.int = TRUE) %>%
+  kable(format = "markdown", digits = 3)
+```
+
+
+
+
+*You're done and ready to submit your work! Knit, commit, and push all remaining changes. You can use the commit message "Done with Lab 4!", and make sure you have pushed all the files to GitHub (your Git pane in RStudio should be empty) and that* <u>all</u> documents are updated in your repo on GitHub. Then submit the assignment on Gradescope following the instructions below.
+
+
+
+# Submitting the Assignment
+
+Once your work is finalized in your GitHub repo, you will submit it as a pdf to Gradescope, please include a link to your repo. **Your assignment must be submitted on Gradescope by the deadline to be considered "on time".**
+
+# Grading
+
+|                                                         |        |
+|---------------------------------------------------------|--------|
+| Exploratory Data Analysis                               | 15     |
+| Analysis of Variance                                    | 21     |
+| Additional Analysis                                     | 4      |
+| Narrative in full sentences & document neatly organized | 5      |
+| Commit messages                                         | 5      |
+| **Total**                                               | **50** |
