@@ -1,0 +1,197 @@
+
+---
+title: "Lab 05: Data Wrangling & Regression"
+subtitle:  "due Nov 8th at 11:59p"
+output: 
+  tufte::tufte_html:
+    tufte_variant: "envisioned"
+    highlight: pygments
+    fig_height: 10
+    toc: true
+    toc_depth: 1
+link-citations: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      warning=FALSE, 
+                      message=FALSE,
+                      eval=FALSE)
+```
+
+When doing statistical analyses in practice, there is often a lot of time spent on cleaning and preparing the data. The goal of today's lab is to practice cleaning messy data, so it can be used in a regression analysis. You will also practice interpreting the results from a regression model that has numeric and categorical predictors and a log-transformed response variable. 
+
+
+# Getting Started 
+
+- Create a new project and repo called Lab-05 
+- Download the data and save it in a folder called raw_data
+- Configure git by typing the following in the **console**.
+
+```{r eval=FALSE}
+library(usethis)
+use_git_config(user.name="github username", user.email="your email")
+```
+
+
+## Packages
+
+We will use the following packages in today's lab. You may need to install the package `skimr` using the `install.packages()` command in your console.
+
+```{r load-packages}
+library(tidyverse)
+library(stringr)
+library(knitr)
+library(skimr)
+library(broom)
+```
+
+
+## Data 
+
+Today's data is about Airbnb listings in Santa Cruz, CA. The data can be obtained from [http://insideairbnb.com/](http://insideairbnb.com/index.html); it was originally scraped from [airbnb.com](https://www.airbnb.com/).  
+
+You can see a visualization of some of the data used in today's lab at [http://insideairbnb.com/santa-cruz-county/](http://insideairbnb.com/santa-cruz-county/).
+
+First, you need to download the file listings.csv from Santa Cruz in this [website](http://insideairbnb.com/get-the-data.html) and save it on your computer
+
+```{r}
+airbnb <- read_csv("raw_data/listings.csv")
+```
+
+We will use the following variables in this lab: 
+
+- `price`: Cost per night (in U.S. dollars)
+- `neighbourhood`: Santa Cruz county City (Santa Cruz, Capitola, Scotts Valley, etc.)
+- `room_type`: 
+    - *Entire home/apt* (guests have entire place to themselves)
+    - *Private room* (Guests have private room to sleep, all other rooms shared)
+    - *Shared room* (Guests sleep in room shared with others) 
+- `number_of_reviews`: Total number of reviews for the listing
+- `reviews_per_month`: The number of reviews per month the listing has over the lifetime of the listing.
+- `minimum_nights`: Number of nights required to book rental 
+
+
+# Exercises 
+
+## Data wrangling & EDA
+
+1. Some Airbnb rentals have cleaning fees, and we want to include the cleaning fee when we calculate the total rental cost. Create a variable call `cleaning_fee` calculated as the $2\%$ of the price per night.
+
+```{r}
+airbnb$cleaning_fee <- airbnb$price * 0.02
+```
+
+
+2. Visualize the distribution of `cleaning_fee` and display the appropriate summary statistics. Use the graph and summary statistics to describe the distribution of `cleaning_fee`.
+
+```{r}
+ggplot(airbnb, aes(y = cleaning_fee)) + geom_boxplot()
+summary(airbnb$cleaning_fee)
+```
+
+
+3. Next, let's examine the `neighbourhood`. 
+    - How many different categories of `neighbourhood` are in the dataset? Show code and output to support your answer. 
+    - Which 3 neighborhoods are most common in the data? These 3 property types make up what percent of the observations in the data? Show code and output to support your answer.
+    
+**ANSWER: The 3 most common neighborhoods are Unincorporated Areas, City of Santa Cruz, and City of Capitola. They make up 97.42% of the observations in the data.**
+    
+```{r}
+airbnb %>%
+  count(neighbourhood, sort = TRUE) %>%
+  mutate(percentage = n / nrow(airbnb) * 100)
+```
+
+
+4. Since an overwhelming majority of the observations in the data are one of the top 3 cities, we would like to create a simplified version of the `neighbourhood` variable that has 4 categories.
+
+Create a new variable called `neigh_simp` that has 4 categories: the three from the previous question and "Other" for all other places. Be sure to save the new variable in the data frame.
+
+```{r}
+airbnb <- airbnb %>%
+  mutate(neigh_simp = fct_lump(neighbourhood, n = 3, other_level = "Other"))
+
+airbnb %>%
+  count(neigh_simp, sort=TRUE)
+```
+
+
+5. What are the 4 most common values for the variable `minimum_nights`? Which value in the top 4 stands out? What is the likely intended purpose for Airbnb listings with this seemingly unusual value for `minimum_nights`? Show code and output to support your answer. 
+
+Airbnb is most commonly used for travel purposes, i.e. as an alternative to traditional hotels, so we only want to include Airbnb listings in our regression analysis that are intended for travel purposes. Filter `airbnb` so that it only includes observations with `minimum_nights` <= 3`. 
+
+**ANSWER: 1 - 3 and 30 are the most common value for minimum nights. "30" stands out in the top 4 because this value is much larger than others. Airbnb listings with 30 nights minimum requirement are usually for long-term renting.**
+
+```{r}
+airbnb %>%
+  count(minimum_nights, sort=TRUE)
+
+airbnb <- filter(airbnb, minimum_nights <= 3)
+```
+
+**You will use this filtered dataset for the remainder of the lab.**
+
+### Regression 
+
+6. For the response variable, we will use the total cost to stay at an Airbnb location for 3 nights. Create a new variable called `price_3_nights` that uses `price` and `cleaning_fee` to calculate the total cost to stay at the Airbnb property for 3 nights. *Note that the cleaning fee is only applied one time per stay*. 
+
+  *Be sure `price` is in the correct format before calculating the new variable.*
+
+```{r}
+airbnb$price_3_nights <- airbnb$cleaning_fee + 3 * airbnb$price
+```
+
+
+
+7. Fit a regression model with the response variable from the previous question and the following predictor variables: `neigh_simp`, `number_of_reviews`, and `reviews_per_month`. Display the model with the inferential statistics and confidence intervals for each coefficient.
+
+```{r}
+linear_reg <- lm(price_3_nights 
+                 ~ neigh_simp
+                 + number_of_reviews
+                 + reviews_per_month, data = airbnb)
+tidy(linear_reg) %>%
+  kable(digits = 3)
+
+confint(linear_reg, level=0.95)
+```
+
+
+8. Interpret the coefficient of `number_of_reviews` and its 95% confidence interval in the context of the data.
+
+**ANSWER: We are 95% confident that, increase in one number of reviews, there will be an decrease in -0.66 and -0.003 of prices for three nights if the neighborhood is in the City of Capitola.**
+
+9. Interpret the coefficient of  `neigh_simpCity of Santa Cruz` and its 95% confidence interval in the context of the data. 
+
+**ANSWER: We are 95% confident that, compared to the City of Capitola, Airbnbs in the City of Santa Cruz has less 370 to 1605 of prices for three nights.**
+
+
+10. Interpret the intercept in the context of the data. Does the intercept have a meaningful interpretation? Briefly explain why or why not. 
+
+**ANSWER: When there's no reviews, the prices for three nights in the City of Capitola is **
+
+11. Suppose your family is planning to visit Santa Cruz over Spring Break, and you want to stay in an Airbnb. You find an Airbnb that is in Scotts Vallye, has 10 reviews, and 5.14 reviews per month. Use the model to predict the total cost to stay at this Airbnb for 3 nights. Include the appropriate 95% interval with your prediction.
+
+12. Now check the assumptions for your regression model. Should you be confident on interpreting the inferential results of your model?
+
+*You're done and ready to submit your work! Knit, commit, and push all remaining changes. You can use the commit message "Done with Lab 05!", and make sure you have pushed all the files to GitHub (your Git pane in RStudio should be empty) and that <u>all</u> documents are updated in your repo on GitHub. Then submit the assignment on Gradescope following the instructions below.*
+
+# Submitting the Assignment
+
+As before, what the instructor is going to check is your repo. Make sure to produce a pdf, and include it in your repo with the name Lab05.pdf. Also, include a folder called raw_data where the original data should be stored, and another folder called mod_data where the final version of your data table should be stored. Finally, a Readme.md should be created with a short description of this lab and the data.
+
+# Grading 
+
+|  	|  	|
+|----------------------------------------	|----	|
+| Data Analysis & EDA | 20	|
+| Regression Analysis |  20	|
+| Narrative in full sentences | 3 	|
+| Document neatly organized with appropriate headers | 2	|
+| Repo and commit messages | 5 	|
+| **Total** | **50** |
+
+# Acknowledgement
+
+The data from this lab is from [insideairbnb.com](http://insideairbnb.com/index.html)
