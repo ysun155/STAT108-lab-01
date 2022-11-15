@@ -1,0 +1,205 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+
+The goal of today’s lab is to gain practice with model selection and model diagnostic procedures in R. This includes 
+
+## Packages
+
+You will need the following packages for today's lab: 
+
+```{r load-packages}
+library(tidyverse)
+library(knitr)
+library(broom)
+library(leaps)
+library(rms)
+library(Sleuth3) #case1201 data
+```
+
+## Data
+
+The dataset in this lab contains the SAT score (out of 1600) and other variables that may be associated with SAT performance for each of the 50 states in the U.S. The data are based on test takers for the 1982 exam. The following variables are in the dataset: 
+
+- **`SAT`**: average total SAT score
+- **`State`**: U.S. State
+- **`Takers`**: percentage of high school seniors who took exam
+- **`Income`**: median income of families of test-takers ($ hundreds)
+- **`Years`**: average number of years test-takers had formal education in social sciences, natural sciences, and humanities
+- **`Public`**: percentage of test-takers who attended public high schools
+- **`Expend`**: total state expenditure on high schools ($ hundreds per student)
+- **`Rank`**: median percentile rank of test-takers within their high school classes
+
+This is the same dataset we used in class on February 8th.
+
+# Exercises
+
+## Part I: Model Selection
+
+We begin this lab by conducting model selection with various selection criteria to choose a final model from the SAT dataset. The code to load the data and create the full main effects model is shown below. The next few questions will walk you through backward model selection using different model selection criteria to select a model.
+
+```{r}
+sat_scores <- Sleuth3::case1201 
+head(sat_scores)
+```
+
+```{r}
+full_model <- lm(SAT ~ Takers + Income + Years + Public + Expend + Rank , data = sat_scores)
+tidy(full_model)
+```
+
+```{marginfigure}
+Type `??regsubsets` in the console for more information about the `regsubsets` function.`
+```
+
+1. We will use the `regsubsets` function in the *leaps* R package to perform backward selection on multiple linear regression models with $Adj. R^2$ or $BIC$ as the selection criteria.
+
+    Fill in the code to display the model selected from backward selection with $Adj. R^2$ as the selection criterion. 
+
+
+```{r}
+model_select <- regsubsets(SAT ~ Takers + Income + Years + Public + Expend + 
+                             Rank , data = sat_scores, method = "backward")
+select_summary <- summary(model_select)
+coef(model_select, which.max(select_summary$adjr2)) #display coefficients 
+```
+
+2. Fill in the code below to display the model selected from backward selection with $BIC$ as the selection criterion.
+
+```{r}
+coef(model_select, which.min(select_summary$bic)) #display coefficients 
+```
+
+```{marginfigure}
+Type `??step` in the console for more information about the `step` function. The output from the `step` function will show you the output from each step of the selection phase.
+```
+
+3. Next, let's select a model using $AIC$ as the selection criterion. To select a model using $AIC$, we will use the `step` function in R. The code below is to conduct backward selection using $AIC$ as the criterion and store the selected model in an object called `model_select_aic`. Use the `tidy` function to display the coefficients of the selected model. 
+
+```{r}
+model_select_aic <- step(full_model, direction = "backward")
+```
+
+
+4. Compare the final models selected by $Adj. R^2$, $AIC$, and $BIC$.
+    - Do the models have the same number of predictors? 
+    - If they don't have the same number of predictors, which selection criterion resulted in the model with the fewest number of predictors? Is this what you would expect? Briefly explain. 
+    
+    **ANSWER: No, only $Adj. R^2$ and $AIC$ have same number of predictors. $BIC$ have the fewest number of predictors because it penalizes the number of parameters more strongly than AIC does.**
+
+## Part II: Model Diagnostics
+
+**Let's choose `model_select_aic`, the model selected usng $AIC$, to be our final model. In this part of the lab, we will examine some model diagnostics for this model.**
+
+5. Use the `augment` function to create a data frame that contains model predictions and statistics for each observation.  Save the data frame, and add a variable called `obs_num` that contains the observation (row) number. Display the first 5 rows of the new data frame.
+
+```{r}
+model_stats <- augment(model_select_aic) %>%
+  mutate(obs_num = row_number())
+head(model_stats, 5)
+```
+
+
+6. Let’s examine the leverage for each observation. Based on the lecture notes, what threshold should we use to determine if observations in this dataset have high leverage? *Report the value and show the quation you used to calculate it.*
+
+```{r}
+(leverage_threshold <- 2*(5+1)/nrow(model_stats))
+```
+
+
+7. Plot the leverage (`.hat`) vs. the observation number. Add a line on the plot marking the threshold from the previous exercise. Be sure to include an informative title and clearly label the axes. *You can use `geom_hline` to the add the threshold line to the plot.*
+
+```{r}
+ggplot(data = model_stats, aes(x = obs_num, y = .hat)) + 
+  geom_point(alpha = 0.7) + 
+  geom_hline(yintercept = leverage_threshold, color = "red")+
+  labs(x = "Observation Number",y = "Leverage",title = "Leverage") +
+  geom_text(aes(label=ifelse(.hat > leverage_threshold, as.character(obs_num), "")), nudge_x = 4)
+```
+
+
+8. Which states (if any) in the dataset are considered high leverage? Show the code used to determine the states. *Hint: You may need to get `State` from `sat_data`.*
+
+```{r}
+model_stats %>% filter(.hat > leverage_threshold) %>% 
+  select(obs_num, Years, Public, Expend, Rank)
+
+sat_scores[c(22,29), 'State']
+```
+
+
+
+9. Next, we will examine the standardized residuals. Plot the standardized residuals (`.std.resid`) versus the predicted values. Include horizontal lines at $y = 2$ and $y = -2$ indicating the thresholds used to determine if standardized residuals have a large magnitude. Be sure to include an informative title and clearly label the axes.*You can use `geom_hline` to the add the threshold lines to the plot.*
+
+```{r}
+ggplot(data = model_stats, aes(x = .fitted,y = .std.resid)) +
+  geom_point(alpha = 0.7) + 
+  geom_hline(yintercept = 0,color = "red") +
+  geom_hline(yintercept = -2,color = "red",linetype = "dotted") +
+  geom_hline(yintercept = 2,color = "red",linetype = "dotted") +
+  labs(x ="Predicted Value",y ="Standardized Residuals",title = "Standardized Residuals vs. Predicted") +
+  geom_text(aes(label = ifelse(abs(.std.resid) > 2,as.character(obs_num),"")), nudge_x = 0.3)
+```
+
+
+10. Based on our thresholds, which states (if any) are considered to have standardized residuals with large magnitude? Show the code used to determine the states. *Hint: You may need to get `State` from `sat_data`.*
+
+
+```{r}
+model_stats %>% filter(.std.resid > 2 | .std.resid < -2) %>% 
+  select(obs_num, Years, Public, Expend, Rank)
+
+sat_scores[c(16, 29, 50), 'State']
+```
+
+
+11. Let's determine if any of these states with high leverage and/or high standardized residuals are influential points, i.e. are significantly impacting the coefficients of the model. Plot the Cook's Distance (`.cooksd`) vs. the observation number. Add a line on the plot marking the threshold to determine a point is influential. Be sure to include an informative title and clearly label the axes. *You can use `geom_hline` to the add the threshold line to the plot.*
+    - Which states (if any) are considered to be influential points? 
+    - If there are influential points, briefly describe strategies to deal with them in your regression analysis.
+    
+    **ANSWER: Alaska is considered to be influential point. Since we want to analyze the risk factors of SAT scores in United States, I'll keep this influential point because Alaska is also a state in the US. If the observation has some errors and we intend to build a model on a smaller range of the predictor variables, I'll drop it.**
+    
+```{r}
+ggplot(data = model_stats, aes(x = obs_num, y = .cooksd)) + 
+  geom_point(alpha = 0.7) + 
+  geom_hline(yintercept=1,color = "red")+
+  labs(x= "Observation Number",y = "Cook's Distance",title = "Cook's Distance") +
+  geom_text(aes(label = ifelse(.cooksd > 1,as.character(obs_num),"")))
+
+sat_scores[29, 'State']
+```
+
+
+12. Lastly, let's examine the Variance Inflation Factor (VIF) used to determine if the predictor variables in the model are correlated with each other.
+$$VIF(\hat{\beta}_j) = \frac{1}{1 - R^2_{x_j|x_{-j}}}$$
+
+   Let's start by manually calculating VIF for the variable `Expend`. 
+  
+  - Begin by fitting a model with `Expend` as the response variable and the other predictor variables in `model_select_aic` as the predictors. 
+  - Calculate $R^2$ for this model. 
+  - Use this $R^2$ to calculate VIF for `Expend`. 
+  - Does `Expend` appear to be highly correlated with any other predictor variables? Briefly explain.
+  
+  **No, since VIF is 1.266 which is relatively low.**
+  
+```{r}
+expend_model <- lm(Expend ~ Years + Public + Rank , data = sat_scores)
+expend_summary <- summary(expend_model)
+(r_squared <- expend_summary$r.squared)
+1 / (1 - r_squared)
+```
+
+
+13. Now, let's use the `vif` function in the *rms* package to calculate VIF for all of the variables in the model. You can use the `tidy` function to output the results neatly in a data frame. Are there any obvious concerns with multicollinearity in this model? Briefly explain.
+
+**ANSWER: There's no obvious concerns with multicollinearity since all variables have a relatively low VIF.**
+
+```{r}
+tidy(vif(model_select_aic))
+```
+
+# Submitting the Assignment
+
+As before, what the instructor is going to check is your repo. Make sure to produce a pdf, and include it in your repo with the name Lab06.pdf. Also, include a folder called raw_data where the original data should be stored, and another folder called mod_data where the final version of your data table should be stored. Finally, a Readme.md should be created with a short description of this lab and the data.
