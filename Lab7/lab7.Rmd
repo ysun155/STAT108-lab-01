@@ -1,0 +1,243 @@
+
+---
+title: 'Lab 07: Logistic Regression'
+subtitle: due Nov 22nd at 11:59p
+link-citations: yes
+output: pdf_document
+---
+
+
+# Getting Started 
+
+## Packages
+
+You will need the following packages for today's lab: 
+
+```{r load-packages}
+library(tidyverse)
+library(stringr)
+library(skimr)
+library(broom)
+library(pROC)
+library(plotROC)
+library(knitr)
+library(performance)
+# Fill in other packages as needed
+```
+
+## Data
+
+The data in this lab is from the [Spotify Song Attributes](https://www.kaggle.com/geomack/spotifyclassification) data set in Kaggle. This data set contains song characteristics of 2017 songs played by a single user and whether or not he liked the song. Since this dataset contains the song preferences of a single user, the scope of the analysis is limited to this particular user.
+
+You will use data `spotify.csv` in the `datasets` folder from our [GitHub repo](https://github.com/malfaro2/stat108_w22_students/tree/main/datasets).
+
+The  [Spotify documentation page](https://developer.spotify.com/documentation/web-api/reference/tracks/get-audio-features/) contains a description of the variables included in this dataset.
+
+```{r}
+df <- read.csv("raw_data/spotify.csv")
+head(df)
+```
+
+
+# Exercises
+
+## Part I: Data Prep & Modeling
+
+1. Read through the Spotify documentation page to learn more about the variables in the dataset. The response variable for this analysis is `target`, where 1 indicates the user likes the song and 0 otherwise. Let's prepare the response and some predictor variables before modeling.
+
+    - If needed, change `target` so that it is factor variable type in R.
+    - Change `key`  so that it is a factor variable type in R, which takes values "D" if `key==2`, "D#" if `key==3`, and "Other" for all other values.
+    - Plot the relationship between `target` and `key`. Briefly describe the relationship between the two variables.
+    
+    **Answer: For songs that the user likes or not, most of them have other keys and only a tiny portion of them have D# key. More songs that the user doesn't like have D# key, and more songs that the user likes have D key.**
+    
+```{r}
+# change `target` and `key` as factor variable
+df$target <- as.factor(df$target)
+
+df$key <- case_when(df$key == 2 ~ "D", 
+                               df$key == 3 ~ "D#",
+                               df$key != 2 & df$key != 3 ~ "Other")
+df$key <- as.factor(df$key)
+
+# dotplot between target and key
+ggplot(df, aes(x = target, fill = key))  + 
+  geom_bar(position = "stack") + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) +
+  ggtitle("Bar chart of the track's keys for whether the user likes the song")
+
+```
+
+    
+
+2. Fit a logistic regression model with `target` as the response variable and the following as predictors: `acousticness`, `danceability`, `duration_ms`, `instrumentalness`, `loudness`, `speechiness`, and `valence`. Display the model output.
+
+```{r}
+logit_reg <- glm(data = df,
+                 target ~ acousticness
+                 + danceability
+                 + duration_ms
+                 + instrumentalness
+                 + loudness
+                 + speechiness
+                 + valence,
+                 family = "binomial")
+
+tidy(logit_reg) %>% 
+  kable(format = "markdown", digits = 3)
+
+```
+
+
+3. We consider adding `key` to the model. Conduct the appropriate test to determine if `key` should be included in the model. Display the output from the test and write your conclusion in the context of the data.
+
+**Conclusion: Since the drop-in-deviance test shows that the new term is statistically significant and we have lower AIC in the model with `key`, we decided to include `key` in the model.**
+
+```{r}
+model_full <- glm(data = df,
+                 target ~ acousticness
+                 + danceability
+                 + duration_ms
+                 + instrumentalness
+                 + loudness
+                 + speechiness
+                 + valence
+                 + key,
+                 family = "binomial")
+
+anova(logit_reg, model_full, test = "Chisq")
+
+glance(logit_reg)$AIC
+glance(model_full)$AIC
+```
+
+
+
+<br>
+**Use the model you selected in Exercise 3 for the remainder of the lab.**
+<br>
+
+4. Display the model you chose in Exercise 3. If appropriate, interpret the coefficient for `keyD#` in the context of the data. Otherwise, state why it's not appropriate to interpret this coefficient.
+
+**Answer: If all other variables are constant, the odds of the user likes the song is 65.9% lower if the song have D# key then D key, given an odds ratio of exp(-1.073) = 0.341**
+
+The odds of a ride exceeding 20 minutes is 37% higher if you are a female compared with a male, if all other variables are constant, given an odds ratio of exp(0.32) = 1.37.
+
+```{r}
+tidy(model_full) %>% 
+  kable(format = "markdown", digits = 3)
+```
+
+
+
+## Part II: Checking Assumptions
+
+In the next few questions, we will do an abbreviated analysis of the residuals. 
+
+5. Use the `augment` function to calculate the predicted probabilities and corresponding residuals. 
+
+```{r}
+(model_aug <- augment(model_full))
+```
+
+
+6. Create a binned plot of the residuals versus the predicted probabilities.
+
+```{r}
+arm::binnedplot(x = model_aug$.fitted, y = model_aug$.resid,
+                xlab = "Predicted Probabilities", 
+                main = "Binned Residual vs. Predicted Values", 
+                col.int = FALSE)
+```
+
+
+7. Choose a quantitative predictor in the final model. Make the appropriate table or plot to examine the residuals versus this predictor variable.
+
+```{r}
+arm::binnedplot(x = model_aug$danceability, 
+                y = model_aug$.resid, 
+                col.int = FALSE,
+                xlab = "Danceability", 
+                main = "Binned Residual vs. Danceability")
+```
+
+
+8. Choose a categorical predictor in the final model. Make the appropriate table or plot to examine the residuals versus this predictor variable.
+
+```{r}
+model_aug %>%
+  group_by(key) %>%
+  summarise(mean_resid = mean(.resid))
+```
+
+
+*In practice, you should examine plots of residuals versus <u>every</u> predictor variable to make a complete assessment of the model fit. For the sake of time on the lab, you will use these three plots to help make the assessment about the model fit.*
+
+9. Based on the residuals plots from Exercises 6 - 8, is the linearity assumption satisfied? Briefly explain why or why not.
+
+**Answer: By the first two residual plots, there are no strong pattern and variance are similar. From the third residual plots, the mean residuals for each type of keys are very small. Therefore the linearity assumption is satisfied.**
+
+## Part III: Model Assessment & Prediction
+
+10. Plot the ROC curve and calculate the area under the curve (AUC). Display at least 5 thresholds (`n.cut = 5`) on the ROC.
+
+```{r}
+(roc_curve <- ggplot(model_aug, 
+                     aes(d = as.numeric(target) - 1, 
+                         m = .fitted)) +
+  geom_roc(n.cuts = 10, labelround = 3) + 
+  geom_abline(intercept = 0) + 
+  labs(x = "False Positive Rate (1 - Specificity)", 
+       y = "True Positive Rate (Sensitivity)") )
+
+calc_auc(roc_curve)$AUC
+```
+
+
+11. Based on the ROC curve and AUC in the previous exercise, do you think this model effectively differentiates between the songs the user likes versus those he doesn't?
+
+**Answer: Since the ROC curve is not very close to the top-left corner and relatively not too high AUC, we won't say the model differentiates between the songs the user likes versus those he doesn't very well but it's acceptable.**
+
+12. You are part of the data science team at Spotify, and your model will be used to make song recommendations to users. The goal is to recommend songs the user has a high probability of liking. 
+
+Choose a threshold value to distinguish between songs the user will like and those the user won't like. What is your threshold value? Use the ROC curve to help justify your choice. 
+
+**Answer: my threshold value would be 0.084. From the ROC curve, up to the point of 0.084, true positive rate is much larger than false positive rate. But after 0.084, the rate of increase in true positive rate starts to slow down.**
+
+13. Make the confusion matrix using the threshold chosen in the previous question. 
+
+```{r}
+threshold <- 0.084
+model_aug %>%
+  mutate(risk_predict = if_else(.fitted > threshold, "Yes", "No")) %>%
+  group_by(target, risk_predict) %>%
+  summarise(n = n()) %>%
+  kable(format="markdown")
+```
+
+
+14. Use the confusion matrix from the previous question to answer the following: 
+    - What is the proportion of true positives (sensitivity)? 
+    - What is the proportion of false positives (1 - specificity)? 
+    - What is the misclassification rate? 
+    
+**Answer: The proportion of true positive is 0.31. The proportion of false positives is 0.13. The misclassification rate is 0.32.**
+  
+
+# Submitting the Assignment
+
+As before, what the instructor is going to check is your repo. Make sure to produce a pdf, and include it in your repo with the name Lab07.pdf. Also, include a folder called raw_data where the original data should be stored, and another folder called mod_data where the final version of your data table should be stored. Finally, a Readme.md should be created with a short description of this lab and the data.
+
+```{r}
+write.csv(df, "mod_data/mod_spotify.csv")
+```
+
+
+# Grading 
+
+|  	|  	|
+|----------------------------------------	|----	|
+| Part I | 20	|
+| Part II |  20	|
+| Document neatly organized with appropriate headers | 5	|
+| Commit messages and repo | 5 	|
+| **Total** | **50** |
