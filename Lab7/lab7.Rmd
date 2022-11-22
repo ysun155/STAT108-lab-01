@@ -231,6 +231,7 @@ As before, what the instructor is going to check is your repo. Make sure to prod
 write.csv(df, "mod_data/mod_spotify.csv")
 ```
 
+**Repo link: https://github.com/ysun155/STAT108-labs/tree/main/Lab7**
 
 # Grading 
 
